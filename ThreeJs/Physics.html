@@ -1,0 +1,243 @@
+s
+<!DOCTYPE html>
+<html>
+<head>
+    <title>three.js / cannon.js example</title>
+    <meta charset="utf-8">
+    <style>
+        * {
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<script src="lib/three.js"></script>
+<script src="lib/cannon.js"></script>
+<script src="lib/dat.gui.min.js"></script>
+<script src="lib/CannonDebugRenderer.js"></script>
+<script type="text/javascript" src="lib/OrbitControls.js"></script>
+<script type="text/javascript" src="lib/HDRCubeTextureLoader.js"></script>
+
+<script>
+	var sphere ,body2,shape2;
+    var world, mass, body, shape, timeStep = 1 / 60,
+        camera, scene, renderer, geometry, material, mesh,box1,box1Body,box1Shape;
+    var plane, groundBody, groundShape, cannonDebugRenderer;
+    var phsyicRenderer = false;
+	var controls;
+    initThree();
+    initCannon();
+    animate();
+    createPanel();
+
+    function initThree() {
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(5,5,15);
+        scene.add(camera);
+		
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+		renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		
+		controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        //  Enable animation loop when using damping or autorotation
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.enableZoom = true;
+		
+        window.addEventListener('mouseup', OnDocumentMouseUp, false)
+        //  Cube mapping second method
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+		var reflectionCube = new THREE.CubeTextureLoader()
+            .setPath('texture/')
+            .load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
+        reflectionCube.format = THREE.RGBFormat;
+		scene.background = reflectionCube;
+///////////////////////////////////////////////////////////////////////////////////////////
+	
+		
+		
+		// 1 create the  ball
+		var texture2 = THREE.ImageUtils.loadTexture('texture/ballImages/football1.jpg');
+
+        texture2.magFilter = THREE.NearestFilter;
+        texture2.minFilter = THREE.NearestFilter;
+        var sphereGeometry = new THREE.SphereGeometry(1, 20, 20);
+        var sphereMaterial = new THREE.MeshPhongMaterial( {
+			map:texture2,
+			side: THREE.DoubleSide,
+            //shininess: 10,
+            //specular: 0xffffff,
+            shading: THREE.SmoothShading
+			
+        } );
+        sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        //sphere.position.set(0,0,0);
+        sphere.castShadow=true;
+        sphere.receiveShadow = true;
+        scene.add(sphere);
+		
+		
+		
+		geometry = new THREE.BoxGeometry(2, 2, 2);
+        material = new THREE.MeshNormalMaterial();
+        mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
+
+        geometry = new THREE.PlaneGeometry(30, 30);
+        material = new THREE.MeshBasicMaterial({color: 0xeeeeee});
+        plane = new THREE.Mesh(geometry, material);
+
+        plane.rotateX(-Math.PI / 2);
+        plane.position.y = -2;
+        scene.add(plane);
+		
+		
+		//  Box1
+        var boxtexture = THREE.ImageUtils.loadTexture('texture/box1.jpg');
+
+        boxtexture.magFilter = THREE.NearestFilter;
+        boxtexture.minFilter = THREE.NearestFilter;
+
+        var boxGeometry = new THREE.BoxGeometry( 4,4, 4 );
+        var boxMaterial = new THREE.MeshPhongMaterial( {
+            map:boxtexture,
+            shininess: 200,
+            specular: 0xffffff,
+            shading: THREE.SmoothShading
+        } );
+        box1 = new THREE.Mesh( boxGeometry, boxMaterial );
+        //box1.position.set(0,0,0);
+		
+        box1.castShadow=true;
+        box1.receiveShadow = true;
+
+        scene.add( box1 );
+		
+/////////////////////////////////////////////////////////////////////BOTTLES
+		
+		
+		
+		 //  Add  ambient lighting
+        var ambiColor = "#ffffff";
+        var ambientLight = new THREE.AmbientLight(ambiColor, 1);
+        scene.add(ambientLight);
+    }
+
+    function initCannon() {
+
+        world = new CANNON.World();
+        world.gravity.set(0, -9.87, 0);
+        world.broadphase = new CANNON.NaiveBroadphase();
+        world.solver.iterations = 20;
+//        var solver = new CANNON.GSSolver();
+//        solver.iterations = 20;
+//        solver.tolerance = 0.7;
+//        world.solver = solver;
+		world.defaultContactMaterial.contactEquationStiffness = 1e9;
+        world.defaultContactMaterial.contactEquationRelaxation = 4;
+        
+		shape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
+        body = new CANNON.Body({mass: 1});
+		body.addShape(shape);
+		body.angularVelocity.set(Math.random() * 10, Math.random() * 10, 0);
+        body.angularDamping = 0.5;
+		body.position.set(0,6,0);
+        world.add(body);
+		
+		shape2 = new CANNON.Sphere(1);
+        body2 = new CANNON.Body({mass: 3});		
+		body2.addShape(shape2);
+        body2.angularVelocity.set(Math.random() * 10, Math.random() * 10, 0);
+        body2.angularDamping = 0.75;
+		body2.position.set(1,9,0);
+        world.add(body2);
+		
+		box1Shape = new CANNON.Box(new CANNON.Vec3(2, 2, 2));
+        box1Body = new CANNON.Body({mass: 10});
+		box1Body.addShape(box1Shape);
+		//box1Body.angularVelocity.set(Math.random() * 10, Math.random() * 10, 0);
+        box1Body.angularDamping = 0.5;
+		box1Body.position.set(0,2,0);
+        world.add(box1Body);
+		
+        groundShape = new CANNON.Plane();
+        groundBody = new CANNON.Body({mass: 0});
+        groundBody.addShape(groundShape);
+        world.add(groundBody);
+
+        groundBody.position.copy(plane.position);
+        groundBody.quaternion.copy(plane.quaternion);
+
+        cannonDebugRenderer = new THREE.CannonDebugRenderer(scene, world);
+
+    }
+
+    function animate() {
+
+        requestAnimationFrame(animate);
+
+        updatePhysics();
+
+        if (phsyicRenderer)
+            cannonDebugRenderer.update();
+
+        render();
+    }
+
+    function updatePhysics() {
+
+        // Step the physics world
+        world.step(timeStep);
+
+        // Copy coordinates from Cannon.js to Three.js
+        mesh.position.copy(body.position);
+        mesh.quaternion.copy(body.quaternion);
+		
+		sphere.position.copy(body2.position);
+        sphere.quaternion.copy(body2.quaternion);
+		
+		box1.position.copy(box1Body.position);
+        box1.quaternion.copy(box1Body.quaternion);
+    }
+
+    function render() {
+
+        renderer.render(scene, camera);
+
+    }
+
+	function createPanel() {
+
+        var gui = new dat.GUI({width: 300});
+        var Renderer = gui.addFolder('Renderer');
+        props = {
+
+            'Wireframe': phsyicRenderer
+        };
+
+        Renderer.add(props, 'Wireframe').onChange(function () {
+            phsyicRenderer = !phsyicRenderer;
+        });
+        Renderer.open();
+    }
+
+    function OnDocumentMouseUp(event) {
+
+        body.angularVelocity.set(Math.random() * 20 - 10, Math.random() * 20 - 10, 5);
+		body2.angularVelocity.set(Math.random() * 20 - 10, Math.random() * 20 - 10, 5);
+    }
+</script>
+</body>
+</html>

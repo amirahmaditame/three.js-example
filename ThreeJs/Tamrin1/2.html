@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Skeleton</title>
+    <script type="text/javascript" src="three.js"></script>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/17.3.0/Tween.js"></script>
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullScreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Div which will hold the Output -->
+<div id="WebGL-output">
+</div>
+
+<script type="text/javascript">
+
+    var scene, camera, renderer;
+
+    init();
+    animate();
+
+
+    // once everything is loaded, we run our Three.js stuff.
+    function init() {
+
+        // create a scene, that will hold all our elements such as objects, cameras and lights.
+        scene = new THREE.Scene();
+
+        // create a camera, which defines where we're looking at.
+        camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        // position and point the camera to the center of the scene
+        camera.position.set(-11, 5, 3);
+        camera.lookAt(scene.position);
+
+        // create a render and set the size
+        renderer = new THREE.WebGLRenderer({antialias: true});
+
+        renderer.setClearColor(new THREE.Color(0x000000));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+
+        //Surface
+        var surfaceGeometry = new THREE.PlaneGeometry(300, 350);
+        var surfaceMaterial = new THREE.MeshBasicMaterial({color: 0xcccccc, side: THREE.DoubleSide});
+        var surfaceMesh = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+        surfaceMesh.rotateX(Math.PI / 2);
+        surfaceMesh.position.y = -50;
+        scene.add(surfaceMesh);
+      /*  var axesHelper = new THREE.AxisHelper(4);
+        axesHelper.rotateY(Math.PI * 3 / 2);*/
+
+       // scene.add(axesHelper);
+		
+		var geometryN = new THREE.BoxBufferGeometry( 2, 2, 2 );
+		var materialN = new THREE.MeshBasicMaterial( {color: 0xFF4500} );
+		var cubeN = new THREE.Mesh( geometryN, materialN );
+		
+		target = {x: 0, y: 5, z: 5};
+        tween = new TWEEN.Tween(cubeN.position).to(target, 5000);
+        tween.delay(500);
+        tween.easing(TWEEN.Easing.Bounce.In);
+        tween.start();
+		
+		scene.add( cubeN );
+
+		
+		var geometryN2 = new THREE.BoxBufferGeometry( 2, 2, 2 );
+		var materialN2 = new THREE.MeshBasicMaterial( {color: 0x00bfff} );
+		var cubeN2 = new THREE.Mesh( geometryN2, materialN2 );
+		
+		target = {x: 0, y: 5, z: -5};
+        tween = new TWEEN.Tween(cubeN2.position).to(target, 5000);
+        tween.delay(500);
+        tween.easing(TWEEN.Easing.Bounce.In);
+        tween.start();
+		
+		scene.add( cubeN2 );
+		
+		var geometryN22 = new THREE.BoxBufferGeometry( 2, 2, 2 );
+		var materialN22 = new THREE.MeshBasicMaterial( {color: 0x00ff40} );
+		var cubeN22 = new THREE.Mesh( geometryN22, materialN22 );
+		
+		target = {x: 0, y: -5, z: 5};
+        tween = new TWEEN.Tween(cubeN22.position).to(target, 5000);
+        tween.delay(500);
+        tween.easing(TWEEN.Easing.Bounce.In);
+        tween.start();
+		
+		scene.add( cubeN22 );
+		
+		
+		var geometryN222 = new THREE.BoxBufferGeometry( 2, 2, 2 );
+		var materialN222 = new THREE.MeshBasicMaterial( {color: 0xbf00ff} );
+		var cubeN222 = new THREE.Mesh( geometryN222, materialN222 );
+		
+		target = {x: 0, y: -5, z: -5};
+        tween = new TWEEN.Tween(cubeN222.position).to(target, 5000);
+        tween.delay(500);
+        tween.easing(TWEEN.Easing.Bounce.In);
+        tween.start();
+		
+		scene.add( cubeN222 );
+		
+		var geometryN3 = new THREE.BoxBufferGeometry( 2, 2, 2 );
+		var materialN3 = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+		var cubeN3 = new THREE.Mesh( geometryN3, materialN3 );
+		
+		scene.add( cubeN3 );
+		
+		
+		
+		
+    }
+
+    function animate() {
+
+        // render the scene
+
+        requestAnimationFrame(animate);
+
+        renderer.render(scene, camera);
+		TWEEN.update();
+
+
+      
+
+
+    }
+
+</script>
+</body>
+</html>

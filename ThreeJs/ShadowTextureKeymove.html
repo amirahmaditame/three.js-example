@@ -1,0 +1,395 @@
+
+<!DOCTYPE html>
+
+<!--@TODO site hay add kardane model baraye bacheha-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Texture</title>
+    <style>
+
+        body {
+        @include display(flex);
+        @include align-content(center);
+            color: #353535;
+            min-height: 100vh;
+            font-family: 'Open Sans', sans-serif;
+            font-size: 4px;
+            text-align: center;
+            background-color: lightgreen;
+            margin: 0 auto;
+            overflow: hidden;
+
+        }
+
+        #web-gl {
+            height: 100%;
+            width: 100%;
+        }
+
+    </style>
+
+
+    <script type="text/javascript" src="lib/three.js"></script>
+    <script type="text/javascript" src="lib/OrbitControls.js"></script>
+    <script type="text/javascript" src="lib/HDRCubeTextureLoader.js"></script>
+    <script type="text/javascript" src="lib/OBJLoader.js"></script>
+    <script type="text/javascript" src="lib/Tween.js"></script>
+
+
+    <script src="lib/DDSLoader.js"></script>
+    <script src="lib/MTLLoader.js"></script>
+    <script src="lib/OBJLoader.js"></script>
+	<script src='threex.sportballs-master/threex.sportballs.js'></script>
+
+</head>
+<body>
+
+
+<div id="web-gl">
+</div>
+
+<script id="scriptScene0" type="text/javascript">
+
+
+	
+    //  Height and Width Variables
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+
+    //  Basic Variables
+    var camera, renderer, scene;
+
+    var planeFight = new THREE.Mesh();
+
+    //  Controls Variable
+    var controls;
+	
+    var tween;
+    var target = {x: 0, y: 37, z: -200};
+
+    init();
+    animate();
+
+
+    //  Once everything is loaded, we run our Three.js stuff.
+    function init() {
+
+        scene = new THREE.Scene();
+
+        //  Cube mapping first method
+        /*
+        var path = "textures/cube/SwedishRoyalCastle/";
+        var format = '.jpg';
+        var urls = [
+        path + 'px' + format, path + 'nx' + format,
+        path + 'py' + format, path + 'ny' + format,
+        path + 'pz' + format, path + 'nz' + format
+        ];
+        var reflectionCube = new THREE.CubeTextureLoader().load( urls );
+        reflectionCube.format = THREE.RGBFormat;
+        scene.background = reflectionCube;
+        */
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+        //  Cube mapping second method
+        var reflectionCube = new THREE.CubeTextureLoader()
+            .setPath('texture/')
+            .load(['px.jpg', 'nx.jpg', 'py.jpg', 'ny.jpg', 'pz.jpg', 'nz.jpg']);
+        reflectionCube.format = THREE.RGBFormat;
+		scene.background = reflectionCube;
+		
+		
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////
+        //  Create a camera, which defines where we're looking at.
+        camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+
+        //  Fog(color,near,far)
+        scene.fog = new THREE.Fog(0xffffff, 0.1, 1000);
+
+        //  Create a render and set the size
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setClearColor(new THREE.Color(0x000000));
+        renderer.setSize(width, height);
+		
+		renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+        //  Enable animation loop when using damping or autorotation
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.25;
+        controls.enableZoom = true;
+
+        //  Position and point the camera to the center of the scene
+        camera.position.x = 50;
+        camera.position.y = 50;
+        camera.position.z = 150;
+		
+        camera.lookAt(scene.position);
+		
+        //  Add the output of the renderer to the html element
+        document.getElementById("web-gl").appendChild(renderer.domElement);
+        window.addEventListener('keyup', onDocumentKeyUp, false);
+
+	
+		//  Add Point Light
+		var c2= 0xffffff ,c1=0xff0000;
+		
+		var Phelp2 = new THREE.SphereBufferGeometry( 2, 16, 8 );
+        var pointLight2 = new THREE.PointLight(c2, 1, 0, 2);
+        pointLight2.position.set(-150, 170, 100);
+        pointLight2.castShadow = true;
+        pointLight2.shadow.camera.near = 1;
+        pointLight2.shadow.camera.far = 1000;
+		
+		pointLight2.add( new THREE.Mesh( Phelp2, new THREE.MeshBasicMaterial( { color: c2 } ) ) );
+		
+        scene.add(pointLight2);
+			
+		var Phelp1 = new THREE.SphereBufferGeometry( 0.5, 16, 8 );
+        var pointLight1 = new THREE.PointLight(c1, 1, 0, 2);
+        pointLight1.position.set(-50,75,20);
+        pointLight1.castShadow = true;
+        pointLight1.shadow.camera.near = 1;
+        pointLight1.shadow.camera.far = 1000;
+		
+		pointLight1.add( new THREE.Mesh( Phelp1, new THREE.MeshBasicMaterial( { color: c1 } ) ) );
+		
+        scene.add(pointLight1);	
+			
+
+        //  Surface Texture
+        var texture = new THREE.TextureLoader().load('texture/floor5.jpg');
+        texture.repeat.set(10, 10);
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.magFilter = THREE.NearestFilter;
+        texture.minFilter = THREE.LinearMipMapLinearFilter;
+
+        //Surface Mesh
+        var surface = new THREE.PlaneGeometry(700, 800);
+        var surfaceMaterial = new THREE.MeshPhongMaterial({color: 0xcccccc, side: THREE.DoubleSide, map: texture});
+        var surfaceMesh = new THREE.Mesh(surface, surfaceMaterial);
+        surfaceMesh.rotateX(Math.PI / 2);
+        surfaceMesh.position.y = -50;
+        surfaceMesh.position.z = -300;
+		
+		surfaceMesh.receiveShadow = true;
+        scene.add(surfaceMesh);
+		
+
+		
+		
+		// 1 create the  ball
+
+        var texture2 = THREE.ImageUtils.loadTexture('texture/ballImages/football1.jpg');
+
+        texture2.magFilter = THREE.NearestFilter;
+        texture2.minFilter = THREE.NearestFilter;
+
+        var sphereGeometry = new THREE.SphereGeometry(8, 30, 30);
+        var sphereMaterial = new THREE.MeshPhongMaterial( {
+            map:texture2,
+            //shininess: 10,
+            //specular: 0xffffff,
+            shading: THREE.SmoothShading
+        } );
+        sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+        sphere.position.set(0,37,-200);
+		sphere.rotation.y += 180;
+		sphere.rotation.x += -45;
+        sphere.castShadow=true;
+        sphere.receiveShadow = true;
+        scene.add(sphere);
+		
+		tween = new TWEEN.Tween(sphere.position).to(target, 500);
+        tween.delay(200);
+        tween.easing(TWEEN.Easing.Cubic.InOut);
+		
+
+//////////////////////////////////////////////////////////////////////////////////////	
+//////////////////////////////////////////////////////////////////////////////////////	
+/////////////////////////////////////////////////////////////////////BOTTLES
+		
+		//create bottle1
+		
+		var textureBo = THREE.ImageUtils.loadTexture('texture/bottle3.jpg');
+
+        textureBo.magFilter = THREE.NearestFilter;
+        textureBo.minFilter = THREE.NearestFilter;
+
+        var BoGeometry = new THREE.CylinderGeometry(5, 5, 15,25,1);
+        var BoMaterial = new THREE.MeshPhongMaterial( {
+            map:textureBo,
+            shininess: 100,
+            specular: 0xffffff,
+            shading: THREE.SmoothShading
+        } );
+        bottle = new THREE.Mesh(BoGeometry, BoMaterial);
+        bottle.position.set(-30,37,-200);
+		bottle.rotateY(Math.PI / 2);
+        bottle.castShadow=true;
+        bottle.receiveShadow = true;
+        scene.add(bottle);
+		
+/////////////////////////////////////////////////////////////////////BOTTLES
+//////////////////////////////////////////////////////////////////////////////////////	
+//////////////////////////////////////////////////////////////////////////////////////	
+////////////////////////////////////////////////////////////////////BOXES		
+		
+		//  Box1
+		var box1;
+        var boxtexture = THREE.ImageUtils.loadTexture('texture/box1.jpg');
+
+        boxtexture.magFilter = THREE.NearestFilter;
+        boxtexture.minFilter = THREE.NearestFilter;
+
+        var boxGeometry = new THREE.BoxGeometry( 50, 50, 50 );
+        var boxMaterial = new THREE.MeshPhongMaterial( {
+            map:boxtexture,
+            shininess: 200,
+            specular: 0xffffff,
+            shading: THREE.SmoothShading
+        } );
+        box1 = new THREE.Mesh( boxGeometry, boxMaterial );
+        box1.position.set(-30,-24,-200);
+		
+        box1.castShadow=true;
+        box1.receiveShadow = true;
+
+        scene.add( box1 );
+	
+
+////////////////////////////////////////////////////////////////////BOXES		
+//////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////	
+///////////////////////////////////////////////////////////////////Walls		
+			
+		//  wall back
+		var cube2;
+        var texture4 = THREE.ImageUtils.loadTexture('texture/ajor1.jpg');
+
+        texture4.magFilter = THREE.NearestFilter;
+        texture4.minFilter = THREE.NearestFilter;
+
+        var cube2Geometry = new THREE.BoxGeometry( 320, 175, 10 );
+        var cube2Material = new THREE.MeshPhongMaterial( {
+            map:texture4,
+            //shininess: 150,
+            //specular: 0xffffff,
+            //shading: THREE.SmoothShading
+        } );
+        cube2 = new THREE.Mesh( cube2Geometry, cube2Material );
+        cube2.position.set(0,37.5,-300);
+        cube2.castShadow=true;
+        cube2.receiveShadow = true;
+
+        scene.add( cube2 );
+			
+		
+		var cube3;
+        cube3 = new THREE.Mesh( cube2Geometry, cube2Material );
+        cube3.position.set(320/2,37.5,-145);
+		cube3.rotateY(Math.PI/2);
+        cube3.castShadow=true;
+        cube3.receiveShadow = true;
+
+        scene.add( cube3 );
+		
+		
+		
+		
+        //  Add  ambient lighting
+       // var ambiColor = "#ffffff";
+       // var ambientLight = new THREE.AmbientLight(ambiColor, 1);
+       // scene.add(ambientLight);
+
+		var objectloader4 = new THREE.ObjectLoader();
+        objectloader4.load("model/plane-fight-threejs/plane-fight.json", function (obj) {
+
+            var planeFight = obj;
+
+            planeFight.scale.set(4,4,4);
+			planeFight.position.set(-50,75,20);
+            scene.add(planeFight);
+
+        });
+		
+		
+    }
+
+    function animate() {
+
+        renderer.render(scene, camera);
+        TWEEN.update();
+        controls.update();
+        requestAnimationFrame(animate);
+    }
+
+    /*
+    https://www.w3.org/2002/09/tests/keys.html
+    use this site to find your keycode
+    useful sites for tween js
+    http://sole.github.io/tween.js/examples/03_graphs.html
+    */
+    //  Code 87 == W key and 68=D
+    function onDocumentKeyUp(event) {
+
+        if (event.keyCode == 87) {
+
+            tweenBallUp();
+            tween.start();
+        }
+		else if(event.keyCode == 68){
+			tweenBallRight();
+            tween.start();
+       }
+		
+    }
+	var k=1 ,j=1;
+    //  Randomize target
+    function tweenBallUp() {
+
+		if(k<4){
+			
+			target.y +=8*k;
+			
+			k++;
+		}
+		else{
+			j=1;
+			k=1;
+			target.x =0;
+			target.y =37;
+			target.z =-200;
+		}
+		
+    }
+	function tweenBallRight() {
+
+		if(j<4){
+			
+			target.x +=8*j;
+			
+			j++;
+		}
+		else{
+			j=1;
+			k=1;
+			target.x =0;
+			target.y =37;
+			target.z =-200;
+		}
+		
+    }
+	
+	
+	
+</script>
+</body>
+</html>
